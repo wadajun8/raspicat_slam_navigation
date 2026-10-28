@@ -48,7 +48,7 @@ def generate_launch_description():
         description='Top-level namespace')
     declare_use_sim_time = DeclareLaunchArgument(
         'use_sim_time',
-        default_value='false',
+        default_value='true',
         description='Use simulation (Gazebo) clock if true')
     declare_use_composition = DeclareLaunchArgument(
         'use_composition', default_value='false',
@@ -295,6 +295,7 @@ def generate_launch_description():
         name='rviz2',
         output='log',
         arguments=['-d', rviz_config_file],
+        parameters=[{'use_sim_time': use_sim_time}],
         condition=IfCondition(use_rviz))
 
     ld = LaunchDescription()
