@@ -18,9 +18,9 @@ def generate_launch_description():
     gnss2map_params_path = os.path.join(
             param_dir, 'tsukuba_gnss2map.param.yaml')
     loc_map_path = os.path.join(
-            map_dir, 'localization', 'map_tsukuba_loc_2410271328.yaml')
+            map_dir, 'localization', 'map_tsukuba.yaml')
     nav_map_path = os.path.join(
-            map_dir, 'navigation', 'map_tsukuba_nav_2410271328.yaml')
+            map_dir, 'navigation', 'map_tsukuba.yaml')
 
     use_sim_time = 'False'
     use_rviz = 'true'
