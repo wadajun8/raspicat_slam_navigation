@@ -83,6 +83,8 @@ SLAMを行うためのパッケージです。
 
 ## Usage
 
+> このフォーク（[wadajun8/raspicat_slam_navigation](https://github.com/wadajun8/raspicat_slam_navigation) の `vlm_kidnapping_detect` ブランチ）では、本家の `raspicat_nav2.launch.py` の代わりに用途別の launch ファイルを使います。一覧と引数は [raspicat_navigation/README.md](raspicat_navigation/README.md) を参照してください。
+
 ### Simulation
 #### SLAM
 * Slam Toolbox
@@ -94,12 +96,13 @@ ros2 service call /motor_power std_srvs/SetBool '{data: true}'
 ```
 
 #### Navigation
-* Navigation 2
+* Navigation 2（AMCL 版。emcl2 版は `raspicat_nav2_sim_emcl2.launch.py`）
 ```
 ros2 launch raspicat_gazebo raspicat_with_iscas_museum.launch.py
-ros2 launch raspicat_navigation raspicat_nav2.launch.py
+ros2 launch raspicat_navigation sim_nav2.launch.py
 ros2 service call /motor_power std_srvs/SetBool '{data: true}'
 ```
+AMCL 版は、RViz の「2D Pose Estimate」で初期位置を入れるまで Nav2 が active になりません。
 
 ### Actual machine
 #### SLAM
@@ -123,7 +126,7 @@ ros2 launch raspicat raspicat.launch.py
 ```
 ##### Remote PC
 ```
-ros2 launch raspicat_navigation raspicat_nav2.launch.py
+ros2 launch raspicat_navigation tsudanuma_2_19.launch.py   # 地図ごとの launch（一覧は raspicat_navigation/README.md）
 ros2 service call /motor_power std_srvs/SetBool '{data: true}'
 ```
 

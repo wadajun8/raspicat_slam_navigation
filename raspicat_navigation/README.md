@@ -16,6 +16,7 @@ launch ファイルは `launch/`、地図は `config/map/`、パラメータは 
 |---|---|---|---|
 | `tsudanuma_2_19.launch.py` | `tsudanuma_2_19` | `nav2.param.yaml` | 使わない |
 | `tsudanuma_campus.launch.py` | `tsudanuma_campus` | `nav2.param.yaml` / `tsudanuma_gnss2map.param.yaml` | 使う |
+| `tsukuba.launch.py` | `tsukuba` | `nav2.param.yaml` / `tsukuba_gnss2map.param.yaml` | 使う |
 | `tsukuba_full.launch.py` | `tsukuba_full` | `nav2.param.yaml` / `tsukuba_gnss2map.param.yaml` | 使う |
 
 ```bash
@@ -59,21 +60,24 @@ ros2 launch raspicat_navigation emcl2_raspicat_nav2.launch.py map:=$HOME/map.yam
 
 既定の地図は `raspicat_slam` パッケージの `config/maps/iscas_museum_map.yaml`（Gazebo の iscas_museum ワールド用）です。
 
-| launch | 自己位置推定 | パラメータ | `use_sim_time` の既定値 |
-|---|---|---|---|
-| `raspicat_nav2_sim_emcl2.launch.py` | emcl2 | `nav2_emcl2_sim.param.yaml` | `false` |
-| `sim_nav2.launch.py` | AMCL | `sim_nav2.param.yaml` | `False` |
-| `sim_nav2_emcl2.launch.py` | emcl2 | `sim_nav2_emcl2.param.yaml` | `True` |
+| launch | 自己位置推定 | パラメータ |
+|---|---|---|
+| `sim_nav2.launch.py` | AMCL | `sim_nav2.param.yaml` |
+| `raspicat_nav2_sim_emcl2.launch.py` | emcl2 | `nav2_emcl2_sim.param.yaml` |
+| `sim_nav2_emcl2.launch.py` | emcl2 | `sim_nav2_emcl2.param.yaml` |
 
-launch 側でパラメータファイルの `use_sim_time` を引数の値で上書きしているので、既定値が `false` のものは `use_sim_time:=true` を付けて起動してください。
+どれも `use_sim_time` の既定値は `true` です（RViz にも渡しています）。Gazebo はシミュレーション時刻で動くので、`false` にすると TF の時刻がずれてゴールが aborted になります。
 
 ```bash
 ros2 launch raspicat_gazebo raspicat_with_iscas_museum.launch.py
-ros2 launch raspicat_navigation raspicat_nav2_sim_emcl2.launch.py use_sim_time:=true
+ros2 launch raspicat_navigation sim_nav2.launch.py                 # AMCL 版
+# ros2 launch raspicat_navigation raspicat_nav2_sim_emcl2.launch.py  # emcl2 版
 ros2 service call /motor_power std_srvs/SetBool '{data: true}'
 ```
 
-`raspicat_nav2_emcl2.launch.py` も同じ地図を既定で使いますが、`use_sim_time` の既定値が `False` の emcl2 版です（パラメータは `emcl2.param.yaml`）。
+- AMCL 版は、RViz の「2D Pose Estimate」で初期位置を入れるまで Nav2 が active になりません（パネルのボタンも押せません）。
+- モータを有効化しないと、ロボットが動かず `Failed to make progress` で中断されます。
+- `raspicat_nav2_emcl2.launch.py` も同じ地図を既定で使いますが、`use_sim_time` の既定値が `False` の emcl2 版です（パラメータは `emcl2.param.yaml`）。
 
 ### センサー
 
@@ -88,7 +92,7 @@ ros2 service call /motor_power std_srvs/SetBool '{data: true}'
 
 | 引数 | 既定値 | 内容 |
 |---|---|---|
-| `use_sim_time` | `False` | シミュレーション時刻を使う |
+| `use_sim_time` | `False`（sim 用は `true`） | シミュレーション時刻を使う |
 | `use_rviz` | `true` | RViz を起動する |
 | `params_file` | （launch ごと） | Nav2 のパラメータファイル |
 | `use_composition` | `False` | コンポーザブルノードで起動する |
@@ -99,5 +103,21 @@ ros2 service call /motor_power std_srvs/SetBool '{data: true}'
 
 | launch | 理由 | 対処 |
 |---|---|---|
-| `tsukuba.launch.py` | 参照している `map_tsukuba_loc_2410271328.yaml` / `map_tsukuba_nav_2410271328.yaml` が存在しない | ファイル内のパスを `config/map/tsukuba/` 内の `map_tsukuba.yaml` に直す |
 | `template.launch.py` | ラッパーから呼ばれる土台で、地図・パラメータの既定値が空 | `loc_map` / `nav_map` / `nav2_params_file`（GNSS を使うなら `gnss2map_params_file`）を指定する |
+
+## ライフサイクルマネージャについて
+
+RViz の Nav2 パネルは、`lifecycle_manager_navigation` が active になるまでボタンを有効にしません。launch でライフサイクルマネージャを起動するときは、次の2点を守ってください（`test/test_launch_files.py` で確認しています）。
+
+- ナビゲーション用のマネージャの名前を `lifecycle_manager_navigation` にする。
+- `lifecycle_manager_localization` も使う場合、2つのマネージャで同じノードを管理しない（地図サーバと AMCL は localization 側、それ以外は navigation 側）。同じノードを両方で管理すると起動時に取り合いになり、どちらかがランダムに失敗します。
+
+## テスト
+
+```bash
+colcon build --symlink-install --packages-select raspicat_navigation
+colcon test --packages-select raspicat_navigation
+colcon test-result --verbose
+```
+
+launch ファイルが参照する地図・パラメータが存在するか、マネージャの名前と管理対象、sim 用 launch の `use_sim_time` を確認します。
