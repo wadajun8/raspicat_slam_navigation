@@ -1,5 +1,6 @@
 emcl2:
   ros__parameters:
+    use_sim_time: False
     odom_freq: 20
     global_frame_id: "map"
     odom_frame_id: "odom"
@@ -11,7 +12,7 @@ emcl2:
     initial_pose_x: 21.084634674915602
     initial_pose_y: 8.44807701406285 
     initial_pose_a: 0.0
-    num_particles: 500
+    num_particles: 700
     alpha_threshold: 0.1
     expansion_radius_position: 1.0
     expansion_radius_orientation: 0.2
