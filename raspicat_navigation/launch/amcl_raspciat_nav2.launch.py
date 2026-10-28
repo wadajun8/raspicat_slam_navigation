@@ -92,9 +92,12 @@ def generate_launch_description():
         param_rewrites=param_substitutions,
         convert_types=True)
     
-    lifecycle_nodes = [
+    # Each node must be managed by only one lifecycle manager. If both managers handle the
+    # same node, they race to configure it and one of them fails at random.
+    lifecycle_nodes_localization = [
         'map_server',
-        'amcl',
+        'amcl']
+    lifecycle_nodes = [
         'controller_server',
         'smoother_server',
         'planner_server',
@@ -137,7 +140,7 @@ def generate_launch_description():
                 arguments=['--ros-args', '--log-level', log_level],
                 parameters=[{'use_sim_time': use_sim_time},
                             {'autostart': autostart},
-                            {'node_names': lifecycle_nodes}]),
+                            {'node_names': lifecycle_nodes_localization}]),
             Node(
                 package='nav2_controller',
                 executable='controller_server',
@@ -242,7 +245,7 @@ def generate_launch_description():
                 name='lifecycle_manager_localization',
                 parameters=[{'use_sim_time': use_sim_time,
                              'autostart': autostart,
-                             'node_names': lifecycle_nodes}]),
+                             'node_names': lifecycle_nodes_localization}]),
             ComposableNode(
                 package='nav2_controller',
                 plugin='nav2_controller::ControllerServer',
